@@ -1,0 +1,60 @@
+import numpy as np
+import tensorflow as tf
+
+# Crear un diccionario con los símbolos de los elementos químicos y su número atómico
+simbolos = ['H', 'C', 'O', 'N']
+num_atomicos = [1, 6, 8, 7]
+elementos = dict(zip(simbolos, num_atomicos))
+
+# Crear los datos de entrenamiento
+x_train = np.array([
+    [2, 0, 2, 0],
+    [0, 1, 2, 1],
+    [4, 0, 0, 2],
+    [1, 1, 4, 2]
+])
+y_train = np.array([
+    [2, 2, 2, 0],
+    [0, 3, 2, 1],
+    [4, 0, 0, 2],
+    [1, 1, 4, 2]
+])
+
+# Crear la red neuronal
+modelo = tf.keras.Sequential([
+    tf.keras.layers.Dense(units=4, activation='relu', input_shape=[4]),
+    tf.keras.layers.Dense(units=8, activation='relu'),
+    tf.keras.layers.Dense(units=4)
+])
+
+# Compilar el modelo
+modelo.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(0.01))
+
+# Entrenar el modelo
+historial = modelo.fit(x_train, y_train, epochs=500, verbose=False)
+
+# Hacer una predicción
+ecuacion = np.array([2, 1, 0, 0], dtype=int).reshape(1, 4)
+coeficientes = modelo.predict(ecuacion)
+print(f'Los coeficientes de la ecuación química son {coeficientes[0].round()}')
+
+# Función para obtener la fórmula química de un compuesto
+def obtener_formula(compuesto):
+    formula = ''
+    for simbolo in compuesto:
+        if simbolo.isupper():
+            formula += simbolo
+        else:
+            formula += f'_{simbolo}'
+    return formula
+
+# Imprimir la ecuación balanceada
+ecuacion_balanceada = ''
+for i, coeficiente in enumerate(coeficientes[0].round()):
+    compuesto = obtener_formula(simbolos[i])
+    if coeficiente > 0:
+        ecuacion_balanceada += f'{coeficiente}{compuesto} + '
+    elif coeficiente < 0:
+        ecuacion_balanceada += f'-{-coeficiente}{compuesto} + '
+ecuacion_balanceada = ecuacion_balanceada.rstrip(' + ')
+print(f'La ecuación balanceada es {ecuacion_balanceada}')
